@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Panic Button Installation Map</title>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB-yhd4UMYDKe0siL5ZegYEIha_gSWs6JU"></script>
+    <script>
+      function initMap() {
+        var map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 4,
+          center: {lat: 39.8283, lng: -98.5795} // Center of USA
+        });
+
+        fetch('https://script.google.com/macros/s/AKfycbzu1M2pG8EYEO2S-kOnjxDKSsjJe-iWIQnXO5J5NuxZmfGtk2-59q8W4LxdzTnfjf72YQ/exec')
+          .then(response => response.json())
+          .then(data => {
+            // Calculate completion %
+            let total = data.length;
+            let completed = data.filter(site => site.Status === 'Complete').length;
+            let percentComplete = ((completed / total) * 100).toFixed(1);
+            document.getElementById('completion').innerHTML = 
+              `✅ ${completed} of ${total} centers completed (${percentComplete}%)`;
+
+            // Map state abbreviations to full state names
+            var stateAbbrToName = {
+              'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas',
+              'CA': 'California', 'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware',
+              'FL': 'Florida', 'GA': 'Georgia', 'HI': 'Hawaii', 'ID': 'Idaho',
+              'IL': 'Illinois', 'IN': 'Indiana', 'IA': 'Iowa', 'KS': 'Kansas',
+              'KY': 'Kentucky', 'LA': 'Louisiana', 'ME': 'Maine', 'MD': 'Maryland',
+              'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota', 'MS': 'Mississippi',
+              'MO': 'Missouri', 'MT': 'Montana', 'NE': 'Nebraska', 'NV': 'Nevada',
+              'NH': 'New Hampshire', 'NJ': 'New Jersey', 'NM': 'New Mexico', 'NY': 'New York',
+              'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio', 'OK': 'Oklahoma',
+              'OR': 'Oregon', 'PA': 'Pennsylvania', 'RI': 'Rhode Island', 'SC': 'South Carolina',
+              'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah',
+              'VT': 'Vermont', 'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia',
+              'WI': 'Wisconsin', 'WY': 'Wyoming'
+            };
+
+            // Place site markers
+            data.forEach(site => {
+              var marker = new google.maps.Marker({
+                position: {lat: parseFloat(site.Latitude), lng: parseFloat(site.Longitude)},
+                map: map,
+                title: site['Center Name'],
+                icon: site.Status === 'Complete'
+                  ? 'http://maps.google.com/mapfiles/ms/icons/green-dot.png'
+                  : 'http://maps.google.com/mapfiles/ms/icons/red-dot.png'
+              });
+
+              var infowindow = new google.maps.InfoWindow({
+                content: `<strong>${site['Center Name']}</strong><br>Status: ${site.Status}`
+              });
+
+              marker.addListener('click', function() {
+                infowindow.open(map, marker);
+              });
+            });
+
+            // Load US States GeoJSON
+            map.data.loadGeoJson('https://raw.githubusercontent.com/ian101105/geojson-files/refs/heads/main/gz_2010_us_040_00_500k.json');
+
+            // Style states based on completion status with name mapping
+            map.data.setStyle(function(feature) {
+              var stateName = feature.getProperty('NAME');
+              var stateSites = data.filter(site => stateAbbrToName[site.State] === stateName);
+              var allComplete = stateSites.length > 0 && stateSites.every(site => site.Status === 'Complete');
+
+              return {
+                fillColor: allComplete ? 'green' : 'gray',
+                fillOpacity: allComplete ? 0.8 : 0.3, // stronger green, keep gray subtle
+                strokeWeight: 1
+              };
+            });
+          });
+      }
+    </script>
+  </head>
+  <body onload="initMap()">
+    <div id="completion" style="font-size: 20px; font-weight: bold; margin-bottom: 10px;">Loading completion data...</div>
+    <h3>Panic Button Installation Map</h3>
+    <div id="map" style="height: 800px; width: 100%;"></div>
+  </body>
+</html>
