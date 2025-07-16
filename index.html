@@ -25,6 +25,7 @@
         margin-top: 10px;
         padding: 10px 20px;
         font-size: 16px;
+        cursor: pointer;
       }
       #map-container {
         display: none;
@@ -33,7 +34,7 @@
     <script>
       function checkPasscode() {
         const code = document.getElementById('passcode-input').value;
-        if (code === 'B3st!@#') {
+        if (code === "B3st!@#") {
           document.getElementById('passcode-screen').style.display = 'none';
           document.getElementById('map-container').style.display = 'block';
           initMap();
@@ -112,7 +113,7 @@
   <body>
     <div id="passcode-screen">
       <h2>Enter Passcode</h2>
-      <input type="password" id="passcode-input" placeholder="Passcode" />
+      <input type="text" id="passcode-input" placeholder="Passcode" autocomplete="off" />
       <button onclick="checkPasscode()">Submit</button>
     </div>
 
